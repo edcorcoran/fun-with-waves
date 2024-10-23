@@ -1,0 +1,8 @@
+name=Fun With Waves
+author=Ed Corcoran
+description=Exploring the Playdate synth functionality
+bundleID=com.example.untitled
+version=1.0
+buildNumber=1
+imagePath=system
+launchSoundPath=
