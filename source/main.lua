@@ -66,6 +66,7 @@ function pd.update()
   -- freq = freq + 1
 
   freq = freq + pd.getCrankTicks(60)
+  if freq < 0 then freq = 0 end
   Period = 1/freq
   pixelPeriod = pixelspersecond * Period
 
