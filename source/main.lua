@@ -11,6 +11,10 @@ local gfx<const> = pd.graphics
 local synth = snd.synth.new(snd.kWaveSine)
 synth:setVolume(0.5)
 
+local synth2 = snd.synth.new(snd.kWaveSine)
+synth2:setVolume(0.5)
+
+local synthSelector = 1
 
 function freqToMIDINote(f)
     return 39.863137 * math.log(f) - 36.376317
@@ -41,12 +45,19 @@ function freqToMIDINote(f)
 -- set frequency variables
 local freq=220
 -- local pixelspersecond = freq*100 -- anchors the period to be 100 pixels long
-local pixelspersecond = 30000 -- anchors the period to be 100 pixels long
+local pixelspersecond = 30000 -- just a tuning variable, really, to make the waves look nice. Can easily change. 
 local Period = 1/freq
 local pixelPeriod = pixelspersecond * Period
 local pi = math.pi
 local phaseShift = 0 -- in radians
 local pixelPhaseShift = pixelspersecond * Period * phaseShift/(2*pi)
+
+-- second wave
+local freq2=300
+local Period2 = 1/freq2
+local pixelPeriod2 = pixelspersecond * Period2
+
+
 
 -- set parameters for drawn sine wave
 local startX = 0 -- left edge
@@ -56,19 +67,41 @@ local endY = 120 -- straight across
 local startAmplitude = 50 -- arbitrary
 local endAmplitude = startAmplitude -- arbitrary but I don't want it to change
 
+function pd.upButtonDown()
+  synthSelector += 1
+  synthSelector = math.fmod(synthSelector-1,2)+1
+end 
 
+function pd.downButtonDown()
+  synthSelector += 1
+  synthSelector = math.fmod(synthSelector-1,2)+1
+end 
 
 function pd.update()
-  gfx.clear()
-  synth:playNote(freq)
-  gfx.drawSineWave(startX,startY,endX,endY, startAmplitude, endAmplitude, pixelPeriod, pixelPhaseShift)
-  -- pd.wait(1000)
-  -- freq = freq + 1
 
-  freq = freq + pd.getCrankTicks(60)
-  if freq < 0 then freq = 0 end
-  Period = 1/freq
-  pixelPeriod = pixelspersecond * Period
+  if synthSelector == 1 then 
+    freq = freq + pd.getCrankTicks(60)
+    if freq < 0 then freq = 0 end
+    Period = 1/freq
+    pixelPeriod = pixelspersecond * Period
+  end
+
+  if synthSelector == 2 then 
+    freq2 = freq2 + pd.getCrankTicks(60)
+    if freq2 < 0 then freq2 = 0 end
+    Period2 = 1/freq2
+    pixelPeriod2 = pixelspersecond * Period2
+  end
+
+
+  -- play freq
+  synth:playNote(freq)
+  synth2:playNote(freq2)
+
+  -- draw wave 
+  gfx.clear()  
+  gfx.drawSineWave(startX,startY,endX,endY, startAmplitude, endAmplitude, pixelPeriod, pixelPhaseShift)
+  gfx.drawSineWave(startX,startY,endX,endY, startAmplitude, endAmplitude, pixelPeriod2, pixelPhaseShift)
 
   gfx.sprite.update()
   pd.timer.updateTimers()
