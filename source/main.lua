@@ -27,6 +27,23 @@ function phaseShiftToPixelPhaseShift(r, f)
   return pixelPhaseShift
 end
 
+function addSynth(f)
+  if synthSelector == 0 then
+    synthSelector = 1
+    else synthSelector = #synths+1
+  end
+  synths[synthSelector] = snd.synth.new(snd.kWaveSine)
+  synths[synthSelector]:setVolume(0.5)
+  freqs[synthSelector] = f
+end 
+
+function deleteSynth(n)
+  -- delete synth n
+  synths[n]:stop()
+  table.remove(synths, n)
+  synthSelector = n-1
+end
+
 -- set parameters for drawn sine wave
 local startX = 0 -- left edge
 local startY = 120 -- centered vertically
@@ -36,17 +53,11 @@ local startAmplitude = 50 -- arbitrary
 local endAmplitude = startAmplitude -- arbitrary but I don't want it to change
 
 -- create initial waves
-local synthSelector = 1
-local synths = {}
-local freqs = {}
+synthSelector = 0
+synths = {}
+freqs = {}
+addSynth(220)
 
-synths[1] = snd.synth.new(snd.kWaveSine)
-synths[1]:setVolume(0.5)
-freqs[1] = 220
-
-synths[2] = snd.synth.new(snd.kWaveSine)
-synths[2]:setVolume(0.5)
-freqs[2] = 300
 
 function pd.upButtonDown()
   synthSelector += 1
@@ -58,30 +69,43 @@ function pd.downButtonDown()
   synthSelector = (synthSelector-1) % #synths + 1
 end 
 
--- function pd.AButtonDown()
--- -- add a new synth and make it selected synth 
--- end
+function pd.AButtonDown()
+  -- add a new synth and make it selected synth 
+  addSynth(220)
+end
 
--- function pd.BButtonDown()
---   -- remove selected synth
--- end
+function pd.BButtonDown()
+  -- remove selected synth
+  if synthSelector > 0 then deleteSynth(synthSelector) end
+end
 
 
 function pd.update()
   -- change active wave
-  freqs[synthSelector] = freqs[synthSelector]+ pd.getCrankTicks(60)
-  if freqs[synthSelector] < 0 then freqs[synthSelector] = 0 end
-  -- Play waves
-  for i=1, #synths
-  do
-    synths[i]:playNote(freqs[i])
+  if synthSelector > 0 then
+    freqs[synthSelector] = freqs[synthSelector]+ pd.getCrankTicks(60)
+    if freqs[synthSelector] < 0 then freqs[synthSelector] = 0 end
+    -- Play waves
+    for i=1, #synths
+    do
+      synths[i]:playNote(freqs[i])
+    end
   end
 
-  -- draw waves
+  -- display current info
   gfx.clear()  
-  for i=1, #synths
-  do
-    gfx.drawSineWave(startX,startY,endX,endY, startAmplitude, endAmplitude, freqToPixelPeriod(freqs[i]), phaseShiftToPixelPhaseShift(0, freqs[i]))
+  if synthSelector > 0 then
+    update = "Wave " .. synthSelector .. " selected with frequency " .. freqs[synthSelector]
+  else update = "No Waves" end
+  gfx.drawText(update, 0, 0)
+  
+
+  -- draw waves
+  if synthSelector > 0 then
+    for i=1, #synths
+    do
+      gfx.drawSineWave(startX,startY,endX,endY, startAmplitude, endAmplitude, freqToPixelPeriod(freqs[i]), phaseShiftToPixelPhaseShift(0, freqs[i]))
+    end
   end
 
   gfx.sprite.update()
